@@ -48,9 +48,17 @@ internal static class Usage
                 1) IDLE priority class, and
                 2) ProcessPowerThrottling execution speed flag (EcoQoS).
 
+              -rt
+                Reads process names from appsettings.json -> "realtimeProcesses" (no .exe suffix),
+                resolves current PIDs at runtime with Process.GetProcessesByName, then
+                sets each PID's priority class to REALTIME (0x100).
+
+                WARNING: Realtime priority can cause system unresponsiveness if too many
+                processes or critical system processes are set to this priority.
+
                 On startup, appsettings.json (if present) supplies processExclusions: if a
                 process name matches any entry (case-insensitive), all instances of that
-                name are skipped for -ecore and -eq changes.
+                name are skipped for -ecore, -eq, and -rt changes.
 
                 If appsettings.json is missing, exclusions are empty; E-core mask must still
                 be resolved successfully.
@@ -66,8 +74,10 @@ internal static class Usage
               EfficiencyModeScanner.exe -v
               EfficiencyModeScanner.exe -ecore
               EfficiencyModeScanner.exe -eq
+              EfficiencyModeScanner.exe -rt
               EfficiencyModeScanner.exe -v -ecore
               EfficiencyModeScanner.exe -v -eq
+              EfficiencyModeScanner.exe -v -rt
 
             Paths
               Default is the executable directory (e.g. bin\Debug\net8.0-windows\ under a
@@ -75,3 +85,4 @@ internal static class Usage
             """);
     }
 }
+

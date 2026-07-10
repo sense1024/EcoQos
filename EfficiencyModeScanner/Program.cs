@@ -15,10 +15,11 @@ static bool IsSwitch(string a, string name) =>
 bool runScan = userArgs.Any(a => IsSwitch(a, "-v"));
 bool runEcore = userArgs.Any(a => IsSwitch(a, "-ecore"));
 bool runEq = userArgs.Any(a => IsSwitch(a, "-eq"));
+bool runRealtime = userArgs.Any(a => IsSwitch(a, "-rt"));
 
 foreach (string a in userArgs)
 {
-    if (IsSwitch(a, "-v") || IsSwitch(a, "-ecore") || IsSwitch(a, "-eq"))
+    if (IsSwitch(a, "-v") || IsSwitch(a, "-ecore") || IsSwitch(a, "-eq") || IsSwitch(a, "-rt"))
         continue;
 
     Console.Error.WriteLine($"Invalid argument: {a}");
@@ -27,7 +28,7 @@ foreach (string a in userArgs)
     Environment.Exit(1);
 }
 
-if (!runScan && !runEcore && !runEq)
+if (!runScan && !runEcore && !runEq && !runRealtime)
 {
     Usage.Print(Console.Out);
     return;
@@ -37,6 +38,7 @@ string settingsPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "a
 AppSettings? appSettings = null;
 string[] processExclusions = [];
 string[] processNamesFromSettings = [];
+string[] realtimeProcessNamesFromSettings = [];
 
 if (!File.Exists(settingsPath))
 {
@@ -49,10 +51,12 @@ var settingsDeserializeOptions = new JsonSerializerOptions { PropertyNameCaseIns
 appSettings = JsonSerializer.Deserialize<AppSettings>(settingsJson, settingsDeserializeOptions) ?? new AppSettings();
 processExclusions = appSettings.ProcessExclusions ?? [];
 processNamesFromSettings = appSettings.Processes ?? [];
+realtimeProcessNamesFromSettings = appSettings.RealtimeProcesses ?? [];
 
 string[] nonEmpty = processExclusions.Where(static s => !string.IsNullOrWhiteSpace(s)).Select(static s => s.Trim()).ToArray();
 Console.WriteLine($"Loaded appsettings.json: processExclusions = [{string.Join(", ", nonEmpty.Select(s => $"\"{s}\""))}] ({nonEmpty.Length} entries)");
 Console.WriteLine($"Loaded appsettings.json: processes = [{processNamesFromSettings.Length} entries]");
+Console.WriteLine($"Loaded appsettings.json: realtimeProcesses = [{realtimeProcessNamesFromSettings.Length} entries]");
 
 string[] normalizedExclusions = processExclusions
     .Where(static s => !string.IsNullOrWhiteSpace(s))
@@ -71,6 +75,7 @@ if (runScan)
     {
         ProcessExclusions = normalizedExclusions,
         Processes = scannedProcesses,
+        RealtimeProcesses = realtimeProcessNamesFromSettings,
         GeneratedAt = DateTimeOffset.UtcNow,
     };
     var saveOptions = new JsonSerializerOptions { WriteIndented = true };
@@ -111,3 +116,17 @@ if (runEq)
     Console.WriteLine();
     await EqModeCommand.RunAsync(processNamesFromSettings, normalizedExclusions);
 }
+
+if (runRealtime)
+{
+    if (realtimeProcessNamesFromSettings.Length == 0)
+    {
+        Console.Error.WriteLine("appsettings.json has no process names in \"realtimeProcesses\". Add them to appsettings.json.");
+        Environment.Exit(1);
+    }
+
+    Console.WriteLine($"Using realtime process list from appsettings.json ({realtimeProcessNamesFromSettings.Length} entries)");
+    Console.WriteLine();
+    await RealtimePriorityCommand.RunAsync(realtimeProcessNamesFromSettings, normalizedExclusions);
+}
+

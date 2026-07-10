@@ -12,7 +12,12 @@ public sealed class AppSettings
     [JsonPropertyName("processes")]
     public string[] Processes { get; init; } = [];
 
+    /// <summary>Process names to set to Realtime priority class.</summary>
+    [JsonPropertyName("realtimeProcesses")]
+    public string[] RealtimeProcesses { get; init; } = [];
+
     /// <summary>UTC timestamp when processes were last refreshed by -v.</summary>
     [JsonPropertyName("generatedAt")]
     public DateTimeOffset? GeneratedAt { get; init; }
 }
+

@@ -8,6 +8,7 @@ internal static class ProcessConstants
     internal const uint ProcessSetLimitedInformation = 0x0800;
     internal const uint ProcessQueryLimitedInformation = 0x1000;
     internal const uint IdlePriorityClass = 0x0000_0040;
+    internal const uint RealtimePriorityClass = 0x00000100;
     internal const uint ProcessPowerThrottlingExecutionSpeed = 0x1;
     internal const uint ProcessPowerThrottlingCurrentVersion = 1;
 }

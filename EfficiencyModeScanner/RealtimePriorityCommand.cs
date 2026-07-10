@@ -4,19 +4,16 @@ using System.Security.Principal;
 
 namespace EfficiencyModeScanner;
 
-internal static class EcoreAffinityCommand
+internal static class RealtimePriorityCommand
 {
-    internal static Task RunAsync(IReadOnlyList<string> targetNames, ulong affinityMaskGroup0, IReadOnlyList<string> processExclusions)
+    internal static Task RunAsync(IReadOnlyList<string> targetNames, IReadOnlyList<string> processExclusions)
     {
-        nuint mask = (nuint)affinityMaskGroup0;
         uint openAccess = ProcessConstants.ProcessSetInformation | ProcessConstants.ProcessQueryLimitedInformation;
-
         return ProcessModifier.RunAsync(
             targetNames,
             processExclusions,
             openAccess,
-            handle => NativeMethods.SetProcessAffinityMask(handle, mask),
-            "E-core affinity");
+            handle => NativeMethods.SetPriorityClass(handle, ProcessConstants.RealtimePriorityClass),
+            "Realtime priority");
     }
 }
-
